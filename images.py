@@ -40,10 +40,11 @@ def remove_bg(image, bg_color):
             bg_image = np.zeros(image.shape, dtype=np.uint8)
             bg_image[:] = bg_color
 
-            output_image = np.where(condition, image, bg_image)
+            output_image = cv2.cvtColor(np.where(condition, image, bg_image), cv2.COLOR_BGR2RGB)
             
-            cv2.imwrite('./output/' + str(idx) + 'remove.png', output_image)
+            #cv2.imwrite('./output/' + str(idx) + 'remove.png', output_image)
 
+    return output_image
 
 if __name__ == '__main__':
     
