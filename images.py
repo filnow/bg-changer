@@ -5,11 +5,6 @@ import numpy as np
 mp_drawing = mp.solutions.drawing_utils
 mp_selfie_segmentation = mp.solutions.selfie_segmentation
 
-IMAGE_FILES = ['./static/images/photo1.jpg']
-BG_IMAGE = './static/images/bg.jpg'
-BG_COLOR = (192, 192, 192) # gray
-MASK_COLOR = (255, 255, 255) # white
-
 def change_bg(image, bg_image):
  
     with mp_selfie_segmentation.SelfieSegmentation(
@@ -37,8 +32,6 @@ def remove_bg(image, bg_color):
         bg_image[:] = bg_color
 
         output_image = cv2.cvtColor(np.where(condition, image, bg_image), cv2.COLOR_BGR2RGB)
-            
-            #cv2.imwrite('./output/' + str(idx) + 'remove.png', output_image)
 
     return output_image
 

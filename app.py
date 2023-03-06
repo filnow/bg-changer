@@ -50,9 +50,7 @@ app.layout = html.Div([
         'borderWidth': '1px',
         'borderStyle': 'solid',
         'backgroundColor': '#B4E4FF'
-    },
-        multiple=True
-    ),
+    }),
     html.Button('Remove Background', id='remove-bg', n_clicks=0, style={
         'position': 'absolute',
         'top': '50%',
@@ -131,7 +129,7 @@ app.layout = html.Div([
 def parse_contents(contents, id, bg_img, slider_value):
     
     img = contents
-
+    print(id)
     if id == 'my-slider' or id == 'remove-bg':
         img = Image.fromarray(remove_bg(readb64(contents), (slider_value, slider_value, slider_value))).convert('RGB')
         return html.Div([
@@ -144,6 +142,8 @@ def parse_contents(contents, id, bg_img, slider_value):
         ])
     elif id == 'reset_img':
         return html.Div([])
+    elif id == 'save_img':
+        return img
     else:
         return html.Div([
             html.Img(src=contents, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
@@ -154,12 +154,14 @@ def parse_contents(contents, id, bg_img, slider_value):
               Input('change-bg', 'contents'),
               Input('remove-bg', 'n_clicks'),
               Input('reset_img', 'n_clicks'),
+              Input('save_img', 'n_clicks'),
               Input('my-slider', 'value'))
 
 def update_output(list_of_contents, 
                   change_bg, 
                   remove_bg,
                   reset_img,
+                  save_img,
                   slider_value):
     
     if list_of_contents is not None:
@@ -170,16 +172,17 @@ def update_output(list_of_contents,
         
         return children
     
-@app.callback(Output("download-image", "data"),
-              Input("save_img", "n_clicks"),
-              State("output-image-upload", "children"))
+# @app.callback(Output("download-image", "data"),
+#               Input("save_img", "n_clicks"),
+#               State("output-image-upload", "children"))
 
-def download_image(n_clicks, children):
-    print(children[0])
-    if n_clicks > 0:
-        return dcc.send_data_frame(children, "image.png")
+# def download_image(n_clicks, children):
+#     print(children)
+#     if n_clicks > 0:
+#         img = children[0]
+#         return dcc.send_data_frame(img, "image.png")
     
-            
+
 
 
 if __name__ == '__main__':
