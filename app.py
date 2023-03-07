@@ -1,10 +1,11 @@
 from dash import Dash, dcc, html, ctx, no_update
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from images import remove_bg, change_bg
 from PIL import Image
 from utils import readb64
 import io
-import flask
+
+ids = []
 app = Dash(__name__)
 
 app.layout = html.Div([
@@ -103,7 +104,6 @@ app.layout = html.Div([
         'height': '100%',
         'backgroundColor': 'black'
         }),
-    
         html.Div([
             dcc.Slider(
                 id='my-slider',
@@ -126,7 +126,6 @@ app.layout = html.Div([
               }
 )
 
-
 def parse_contents(contents, id, bg_img, slider_value):
     
     img = Image.fromarray(readb64(contents)).convert('RGB')
@@ -142,7 +141,7 @@ def parse_contents(contents, id, bg_img, slider_value):
             html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
         ])]
     elif id == 'reset_img':
-        return html.Div([])
+        return [img, html.Div([])]
     else:
         return [img, html.Div([
             html.Img(src=contents, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
@@ -167,21 +166,27 @@ def update_output(list_of_contents,
  
     if list_of_contents is not None:
 
+        if ctx.triggered_id == 'save_img':
+
+            children = [parse_contents(c, 
+                                   ids[-1], 
+                                   change_bg, 
+                                   slider_value) for c in list_of_contents]
+            img = children[0][0]
+            img_io = io.BytesIO()
+            img.save(img_io, 'PNG')
+            img_io.seek(0)
+
+            data = dcc.send_bytes(img_io.getvalue(), "image.png")
+
+            return data, no_update
 
         children = [parse_contents(c, 
                                    ctx.triggered_id, 
                                    change_bg, 
                                    slider_value) for c in list_of_contents]
-        
-        img = children[0][0]
-        img_io = io.BytesIO()
-        img.save(img_io, 'PNG')
-        img_io.seek(0)
-        
-        if ctx.triggered_id == 'save_img':
-            data = dcc.send_bytes(img_io.getvalue(), "image.png")
-            return data, no_update
-        
+        ids.append(ctx.triggered_id)
+
         return no_update, children[0][1]
     
 
