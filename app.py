@@ -1,9 +1,10 @@
-from dash import Dash, dcc, html, ctx
+from dash import Dash, dcc, html, ctx, no_update
 from dash.dependencies import Input, Output, State
 from images import remove_bg, change_bg
 from PIL import Image
 from utils import readb64
-
+import io
+import flask
 app = Dash(__name__)
 
 app.layout = html.Div([
@@ -124,38 +125,38 @@ app.layout = html.Div([
               'overflow': 'hidden',
               }
 )
-  
+
 
 def parse_contents(contents, id, bg_img, slider_value):
     
-    img = contents
-    print(id)
+    img = Image.fromarray(readb64(contents)).convert('RGB')
+
     if id == 'my-slider' or id == 'remove-bg':
         img = Image.fromarray(remove_bg(readb64(contents), (slider_value, slider_value, slider_value))).convert('RGB')
-        return html.Div([
+        return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
-        ])
+        ])]
     elif id == 'change-bg':
         img = Image.fromarray(change_bg(readb64(contents), readb64(bg_img))).convert('RGB')
-        return html.Div([
+        return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
-        ])
+        ])]
     elif id == 'reset_img':
         return html.Div([])
-    elif id == 'save_img':
-        return img
     else:
-        return html.Div([
+        return [img, html.Div([
             html.Img(src=contents, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
-        ])
+        ])]
 
-@app.callback(Output('output-image-upload', 'children'),
+@app.callback(Output('download-image', 'data'),
+              Output('output-image-upload', 'children'),
               Input('upload-image', 'contents'),
               Input('change-bg', 'contents'),
               Input('remove-bg', 'n_clicks'),
               Input('reset_img', 'n_clicks'),
               Input('save_img', 'n_clicks'),
-              Input('my-slider', 'value'))
+              Input('my-slider', 'value'),
+              prevent_initial_call=True,)
 
 def update_output(list_of_contents, 
                   change_bg, 
@@ -163,27 +164,26 @@ def update_output(list_of_contents,
                   reset_img,
                   save_img,
                   slider_value):
-    
+ 
     if list_of_contents is not None:
+
+
         children = [parse_contents(c, 
                                    ctx.triggered_id, 
                                    change_bg, 
                                    slider_value) for c in list_of_contents]
         
-        return children
+        img = children[0][0]
+        img_io = io.BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        
+        if ctx.triggered_id == 'save_img':
+            data = dcc.send_bytes(img_io.getvalue(), "image.png")
+            return data, no_update
+        
+        return no_update, children[0][1]
     
-# @app.callback(Output("download-image", "data"),
-#               Input("save_img", "n_clicks"),
-#               State("output-image-upload", "children"))
-
-# def download_image(n_clicks, children):
-#     print(children)
-#     if n_clicks > 0:
-#         img = children[0]
-#         return dcc.send_data_frame(img, "image.png")
-    
-
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
