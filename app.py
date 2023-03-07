@@ -1,8 +1,6 @@
 from dash import Dash, dcc, html, ctx, no_update
 from dash.dependencies import Input, Output
-from images import remove_bg, change_bg
-from PIL import Image
-from utils import readb64
+from images import ImageProcessor
 import io
 
 ids = []
@@ -112,12 +110,14 @@ app.layout = html.Div([
                 step=10,
                 value=192,
             ),
-        ], style={'position': 'absolute', 
+        ], 
+        style={'position': 'absolute', 
                   'bottom': '25%', 
                   'width': '40%', 
                   'right': '3%',
                   }),
-    ], style={'position': 'relative', 
+    ], 
+    style={'position': 'relative', 
               'height': '98vh', 
               'width': '100vw', 
               'max-width': '100%',
@@ -128,15 +128,15 @@ app.layout = html.Div([
 
 def parse_contents(contents, id, bg_img, slider_value):
     
-    img = Image.fromarray(readb64(contents)).convert('RGB')
+    img = ImageProcessor(contents)
 
     if id == 'my-slider' or id == 'remove-bg':
-        img = Image.fromarray(remove_bg(readb64(contents), (slider_value, slider_value, slider_value))).convert('RGB')
+        img = img.remove_bg((slider_value, slider_value, slider_value))
         return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
         ])]
     elif id == 'change-bg':
-        img = Image.fromarray(change_bg(readb64(contents), readb64(bg_img))).convert('RGB')
+        img = img.change_bg(bg_img)
         return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
         ])]
