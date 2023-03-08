@@ -17,5 +17,5 @@ python3 app.py
 # TODO
 
 * change model to be slower but more accurate 
-* add viedo support
+* add video support
 * make frontend kinda good

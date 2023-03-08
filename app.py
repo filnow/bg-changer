@@ -107,42 +107,57 @@ app.layout = html.Div([
                 id='red-slider',
                 min=0,
                 max=255,
-                step=10,
+                marks={0: {'label' : 'R', 'style': {'color': '#f50'}}},
                 value=130,
             ),
         ], 
         style={'position': 'absolute', 
                   'bottom': '23%', 
                   'width': '40%', 
-                  'right': '4%',
+                  'right': '6%',
         }),
         html.Div([
             dcc.Slider(
                 id='green-slider',
                 min=0,
                 max=255,
-                step=10,
+                marks={0: {'label' : 'G', 'style': {'color': '#32CD32'}}},
                 value=130,
             ),
         ], 
         style={'position': 'absolute', 
                   'bottom': '18%', 
                   'width': '40%', 
-                  'right': '4%',
+                  'right': '6%',
         }),
         html.Div([
             dcc.Slider(
                 id='blue-slider',
                 min=0,
                 max=255,
-                step=10,
+                marks={0: {'label' : 'B', 'style': {'color': '#0000ff'}}},
                 value=130,
             ),
         ], 
         style={'position': 'absolute', 
                   'bottom': '13%', 
                   'width': '40%', 
-                  'right': '4%',
+                  'right': '6%',
+        }),
+        html.Div([
+            dcc.Slider(
+                id='brightness-slider',
+                min=0,
+                max=255,
+                marks={0: {'label' : 'BRIGHT', 'style': {'color': '#ffff00'}}},
+                value=130,
+                vertical=True,
+            ),
+        ], 
+        style={'position': 'absolute', 
+                  'top': '10%', 
+                  'width': '40%', 
+                  'left': '96%',
         }),
     ], 
     style={'position': 'relative', 
@@ -151,6 +166,7 @@ app.layout = html.Div([
               'max-width': '100%',
               'max-height': '100%',
               'overflow': 'hidden',
+              'margin': '0',
               }
 )
 
@@ -162,24 +178,24 @@ def parse_contents(contents, id, bg_img, slider_value):
     if id == 'remove-bg':
         img = img.remove_bg((192,192,192))
         return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
+            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
     elif id in slider_ids:
         img = img.remove_bg(slider_value)
         return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
+            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
 
     elif id == 'change-bg':
         img = img.change_bg(bg_img)
         return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
+            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
     elif id == 'reset_img':
         return [img, html.Div([])]
     else:
         return [img, html.Div([
-            html.Img(src=contents, style={'width': '100%', 'height': '100%', 'margin': '10px'}),  
+            html.Img(src=contents, style={'width': '100%', 'height': '100%',}),  
         ])]
 
 @app.callback(Output('download-image', 'data'),
@@ -224,8 +240,7 @@ def update_output(list_of_contents,
             children = [parse_contents(c, 
                                     ctx.triggered_id, 
                                     change_bg, 
-                                    (red_slider, green_slider, blue_slider),
-                                    ids,) for c in list_of_contents]
+                                    (red_slider, green_slider, blue_slider),) for c in list_of_contents]
             ids.append(ctx.triggered_id)
 
             return no_update, children[0][1]
