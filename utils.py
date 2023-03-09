@@ -15,3 +15,8 @@ def str_to_io(img: Image) -> io.BytesIO:
    img.save(img_io, 'PNG')
    img_io.seek(0)
    return img_io
+
+def b64_image(image_filename: str) -> str:
+   with open(image_filename, 'rb') as f:
+      image = f.read()
+   return 'data:image/jpg;base64,' + base64.b64encode(image).decode('utf-8')
