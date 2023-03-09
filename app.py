@@ -3,13 +3,16 @@ from dash.dependencies import Input, Output
 from images import ImageProcessor
 from utils import str_to_io, b64_image
 
-ids = []
 
 bg_images = {
     'example1': './assets/forest.jpg',
     'example2': './assets/beach.jpg',
     'example3': './assets/city.jpg'
 }
+
+ids = []
+slider_ids = ['red-slider', 'green-slider', 'blue-slider']
+changes = [*bg_images.keys(), 'change-bg', 'brightness-slider']
 
 app = Dash(__name__)
 
@@ -31,7 +34,6 @@ app.layout = html.Div([
             'position': 'absolute',
             'top': '5%',
             'left': '7%',
-            'backgroundColor': '#B4E4FF'
         },
         multiple=True
     ),
@@ -42,7 +44,8 @@ app.layout = html.Div([
         'display': 'flex',
         'flexDirection': 'column',
         'justifyContent': 'center',
-        'alignItems': 'center'
+        'alignItems': 'center',
+        'backgroundColor': '#0000ff',
     }),
     dcc.Upload('Change Background', id='change-bg', style={
         'position': 'absolute',
@@ -170,28 +173,20 @@ app.layout = html.Div([
               }
 )
 
-def parse_contents(contents, id, bg_img, slider_value):
+def parse_contents(contents, id, bg_img, slider_value, brightness_slider_value):
     
     img = ImageProcessor(contents)
-    slider_ids = ['red-slider', 'green-slider', 'blue-slider']
-    changes = ['example1', 'example2', 'example3', 'change-bg']
-    if id == 'remove-bg':
-        img = img.remove_bg((192,192,192))
-        return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
-        ])]
-    elif id in slider_ids:
+
+    if id in slider_ids:
         img = img.remove_bg(slider_value)
         return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
     elif id in changes:
-        img = img.change_bg(bg_img)
+        img = img.change_bg(bg_img, brightness_slider_value)
         return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
-    elif id == 'reset_img':
-        return [img, html.Div([])]
     else:
         return [img, html.Div([
             html.Img(src=contents, style={'width': '100%', 'height': '100%',}),  
@@ -223,8 +218,8 @@ def update_output(list_of_contents,
                   example3,):
 
     if list_of_contents is not None:
+        
         if ctx.triggered_id == 'save_img':
-
             children = [parse_contents(c, 
                                    ids[-1], 
                                    change_bg, 
@@ -243,10 +238,12 @@ def update_output(list_of_contents,
                                     ctx.triggered_id, 
                                     change_bg, 
                                     (red_slider, green_slider, blue_slider),
+                                    brightness_slider,
                                     ) for c in list_of_contents]
             ids.append(ctx.triggered_id)
             
             return no_update, children[0][1]
+    
         
 
 if __name__ == '__main__':

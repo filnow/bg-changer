@@ -17,9 +17,10 @@ class ImageProcessor:
         print(type(Image.open(self.image).convert('RGB')))
         return Image.open(self.image).convert('RGB')
 
-    def change_bg(self, bg_image: str) -> Image:
+    def change_bg(self, bg_image: str, brightness: int  = 0) -> Image:
         bg_image = readb64(bg_image)
-        resized = cv2.resize(bg_image, (self.image.shape[1], self.image.shape[0]), interpolation = cv2.INTER_AREA)
+        change_brightness = cv2.convertScaleAbs(bg_image, alpha=(brightness/100), beta=0)
+        resized = cv2.resize(change_brightness, (self.image.shape[1], self.image.shape[0]), interpolation = cv2.INTER_AREA)
         output_image = cv2.cvtColor(np.where(self.condition, self.image, resized), cv2.COLOR_BGR2RGB)
         
         return Image.fromarray(output_image).convert('RGB')
@@ -28,7 +29,7 @@ class ImageProcessor:
         bg_image = np.zeros(self.image.shape, dtype=np.uint8)
         bg_image[:] = bg_color
         output_image = cv2.cvtColor(np.where(self.condition, self.image, bg_image), cv2.COLOR_BGR2RGB)
-        
+
         return Image.fromarray(output_image).convert('RGB')
 
     
