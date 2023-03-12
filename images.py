@@ -14,13 +14,11 @@ class ImageProcessor:
         self.condition = np.stack((self.results.segmentation_mask,) * 3, axis=-1) > 0.1
 
     def __repr__(self) -> Image:
-        print(type(Image.open(self.image).convert('RGB')))
         return Image.open(self.image).convert('RGB')
 
-    def change_bg(self, bg_image: str, brightness: int  = 0) -> Image:
+    def change_bg(self, bg_image: str) -> Image:
         bg_image = readb64(bg_image)
-        change_brightness = cv2.convertScaleAbs(bg_image, alpha=(brightness/100), beta=0)
-        resized = cv2.resize(change_brightness, (self.image.shape[1], self.image.shape[0]), interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(bg_image, (self.image.shape[1], self.image.shape[0]), interpolation = cv2.INTER_AREA)
         output_image = cv2.cvtColor(np.where(self.condition, self.image, resized), cv2.COLOR_BGR2RGB)
         
         return Image.fromarray(output_image).convert('RGB')

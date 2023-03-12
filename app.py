@@ -2,17 +2,19 @@ from dash import Dash, dcc, html, ctx, no_update
 from dash.dependencies import Input, Output
 from images import ImageProcessor
 from utils import str_to_io, b64_image
+from typing import List, Dict
 
 
-bg_images = {
+bg_images: Dict[str, str] = {
     'example1': './assets/forest.jpg',
     'example2': './assets/beach.jpg',
     'example3': './assets/city.jpg'
 }
 
-ids = []
-slider_ids = ['red-slider', 'green-slider', 'blue-slider']
-changes = [*bg_images.keys(), 'change-bg', 'brightness-slider']
+ids: List[str] = []
+slider_ids: List[str] = ['red-slider', 'green-slider', 'blue-slider']
+changes: List[str] = [*bg_images.keys(), 'change-bg', 'brightness-slider']
+
 
 app = Dash(__name__)
 
@@ -34,6 +36,7 @@ app.layout = html.Div([
             'position': 'absolute',
             'top': '5%',
             'left': '7%',
+            'backgroundColor': '#B4E4FF',
         },
         multiple=True
     ),
@@ -45,7 +48,6 @@ app.layout = html.Div([
         'flexDirection': 'column',
         'justifyContent': 'center',
         'alignItems': 'center',
-        'backgroundColor': '#0000ff',
     }),
     dcc.Upload('Change Background', id='change-bg', style={
         'position': 'absolute',
@@ -147,21 +149,6 @@ app.layout = html.Div([
                   'width': '40%', 
                   'right': '6%',
         }),
-        html.Div([
-            dcc.Slider(
-                id='brightness-slider',
-                min=0,
-                max=255,
-                marks={0: {'label' : 'BRIGHT', 'style': {'color': '#ffff00'}}},
-                value=130,
-                vertical=True,
-            ),
-        ], 
-        style={'position': 'absolute', 
-                  'top': '10%', 
-                  'width': '40%', 
-                  'left': '96%',
-        }),
     ], 
     style={'position': 'relative', 
               'height': '98vh', 
@@ -173,7 +160,7 @@ app.layout = html.Div([
               }
 )
 
-def parse_contents(contents, id, bg_img, slider_value, brightness_slider_value):
+def parse_contents(contents, id, bg_img, slider_value):
     
     img = ImageProcessor(contents)
 
@@ -183,7 +170,7 @@ def parse_contents(contents, id, bg_img, slider_value, brightness_slider_value):
             html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
     elif id in changes:
-        img = img.change_bg(bg_img, brightness_slider_value)
+        img = img.change_bg(bg_img)
         return [img, html.Div([
             html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
         ])]
@@ -200,7 +187,6 @@ def parse_contents(contents, id, bg_img, slider_value, brightness_slider_value):
             Input('red-slider', 'value'),
             Input('green-slider', 'value'),
             Input('blue-slider', 'value'),
-            Input('brightness-slider', 'value'),
             Input('example1', 'n_clicks'),
             Input('example2', 'n_clicks'),
             Input('example3', 'n_clicks'),
@@ -212,14 +198,16 @@ def update_output(list_of_contents,
                   red_slider,
                   green_slider,
                   blue_slider,
-                  brightness_slider,
                   example1,
                   example2,
                   example3,):
-
+ 
+   
     if list_of_contents is not None:
-        
         if ctx.triggered_id == 'save_img':
+            if ids[-1] in bg_images.keys():
+                change_bg = b64_image(bg_images[ids[-1]])
+
             children = [parse_contents(c, 
                                    ids[-1], 
                                    change_bg, 
@@ -227,7 +215,6 @@ def update_output(list_of_contents,
                                    ) for c in list_of_contents]
 
             data = dcc.send_bytes(str_to_io(children[0][0]).getvalue(), "image.png")
-
             return data, no_update
 
         else:
@@ -238,7 +225,6 @@ def update_output(list_of_contents,
                                     ctx.triggered_id, 
                                     change_bg, 
                                     (red_slider, green_slider, blue_slider),
-                                    brightness_slider,
                                     ) for c in list_of_contents]
             ids.append(ctx.triggered_id)
             
