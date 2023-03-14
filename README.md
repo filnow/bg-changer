@@ -19,3 +19,4 @@ python3 app.py
 * change model to be slower but more accurate 
 * add video support
 * make frontend kinda good
+* add bilateral filter to mask

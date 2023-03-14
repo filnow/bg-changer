@@ -11,7 +11,7 @@ class ImageProcessor:
         self.image = readb64(image)
         self.seg = mp.solutions.selfie_segmentation.SelfieSegmentation(model_selection=1)
         self.results = self.seg.process(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
-        self.condition = np.stack((self.results.segmentation_mask) * 3, axis=-1) > 0.1
+        self.condition = np.stack((self.results.segmentation_mask,) * 3, axis=-1) > 0.1
 
     def change_bg(self, bg_image: str) -> Image.Image:
         bg_image_np = readb64(bg_image)
