@@ -5,6 +5,13 @@ from utils import str_to_io, b64_image
 from typing import List, Dict, Tuple
 
 
+style_img: Dict[str, str] = {
+    'max-width': '100%', 
+    'max-height': '100%', 
+    'min-height': '100%', 
+    'min-width': '100%',
+    }
+
 bg_images: Dict[str, str] = {
     'example1': './assets/forest.jpg',
     'example2': './assets/beach.jpg',
@@ -29,25 +36,36 @@ app.layout = html.Div([
             'height': '30vh',
             'lineHeight': '60px',
             'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
+            'borderStyle': 'solid',
+            'borderRadius': '3px',
             'textAlign': 'center',
             'margin': '10px',
             'position': 'absolute',
-            'top': '5%',
+            'top': '9%',
             'left': '7%',
-            'backgroundColor': '#B4E4FF',
+            'backgroundColor': '#CFE8F7',
         },
         multiple=True
     ),
+    html.Div(id='behind-image', style={
+        'position': 'relative',
+        'top': '10%',
+        'left': '55%',
+        'backgroundColor': '#FFFFFF',
+        'width': '38%',
+        'height': '50%',
+        'borderWidth': '3px',
+        'borderStyle': 'solid',
+    }),
     html.Div(id='output-image-upload',  style={
         'position': 'absolute',
         'top': '10%',
-        'right': '10%',
-        'display': 'flex',
-        'flexDirection': 'column',
-        'justifyContent': 'center',
-        'alignItems': 'center',
+        'left': '55%',
+        'width': '38%',
+        'height': '50%',
+        'borderWidth': '3px',
+        'borderStyle': 'solid',
+        'overflow': 'hidden',
     }),
     dcc.Upload('Change Background', id='change-bg', style={
         'position': 'absolute',
@@ -58,10 +76,10 @@ app.layout = html.Div([
         'lineHeight': '60px',
         'textAlign': 'center',
         'margin': '10px',
-        'borderRadius': '5px',
+        'borderRadius': '3px',
         'borderWidth': '1px',
         'borderStyle': 'solid',
-        'backgroundColor': '#B4E4FF'
+        'backgroundColor': '#CFE8F7'
     }),
     html.Button('Save image', id='save_img', n_clicks=0, style={
         'position': 'absolute',
@@ -71,8 +89,9 @@ app.layout = html.Div([
         'height': '7vh',
         'lineHeight': '60px',
         'textAlign': 'center',
-        'backgroundColor': '#B4E4FF',
-        'borderRadius': '5px',
+        'backgroundColor': '#CFE8F7',
+        'borderColor': 'black',
+        'borderRadius': '3px',
         'borderWidth': '1px',
         'borderStyle': 'solid',
         'margin': '10px'
@@ -81,21 +100,21 @@ app.layout = html.Div([
         'position': 'absolute',
         'top': '65%',
         'left': '8%',
-        'width': '8%',
+        'width': '9%',
         'height': '10%',
     }),
     html.Img(id='example2', src='/assets/beach.jpg' ,style={
         'position': 'absolute',
         'top': '65%',
         'left': '18%',
-        'width': '8%',
+        'width': '9%',
         'height': '10%',
     }),
     html.Img(id='example3', src='/assets/city.jpg' ,style={
         'position': 'absolute',
         'top': '65%',
         'left': '28%',
-        'width': '8%',
+        'width': '9%',
         'height': '10%',
     }),
     dcc.Download(id="download-image"),
@@ -151,7 +170,7 @@ app.layout = html.Div([
         }),
     ], 
     style={'position': 'relative', 
-              'height': '98vh', 
+              'height': '98vh', #TODO: why 98vh?
               'width': '100vw', 
               'max-width': '100%',
               'max-height': '100%',
@@ -169,19 +188,13 @@ def parse_contents(contents: str,
 
     if id in slider_ids:
         img = img.remove_bg(slider_value)
-        return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
-        ])]
+        return [img, html.Div([html.Img(src=img, style=style_img),])]
     elif id in changes:
         img = img.change_bg(bg_img)
-        return [img, html.Div([
-            html.Img(src=img, style={'width': '100%', 'height': '100%',}),  
-        ])]
+        return [img, html.Div([html.Img(src=img, style=style_img),])]
     else:
         img = img.default_bg()
-        return [img, html.Div([
-            html.Img(src=contents, style={'width': '100%', 'height': '100%',}),  
-        ])]
+        return [img, html.Div([html.Img(src=contents, style=style_img),])]
 
 @app.callback(Output('download-image', 'data'),
             Output('output-image-upload', 'children'),
@@ -230,10 +243,9 @@ def update_output(list_of_contents: List[str],
                                     (red_slider, green_slider, blue_slider),
                                     ) for c in list_of_contents]
             ids.append(ctx.triggered_id)
-            
             return no_update, children[0][1]
     
         
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
