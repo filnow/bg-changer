@@ -6,7 +6,7 @@ The segmentation is done with MobileNetV3 model that is implemented in mediapipe
 
 # Preview
 
-![Alt text](assets/demo.gif) / ![](assets/demo.gif)
+![Alt text](assets/demo.gif)
 
 
 # Run
