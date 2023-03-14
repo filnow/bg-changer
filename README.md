@@ -4,6 +4,11 @@ This project is mostly for learning dash/flask and mediapipe/opencv.
 
 The segmentation is done with MobileNetV3 model that is implemented in mediapipe.
 
+# Preview
+
+![Alt text](assets/demo.gif) / ![](assets/demo.gif)
+
+
 # Run
 ```bash
 
