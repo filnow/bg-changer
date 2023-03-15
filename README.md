@@ -1,8 +1,12 @@
 # Why background changer?
 
-This project is mostly for learning dash/flask and mediapipe/opencv.
+This project is mostly for learning dash/flask and mediapipe/opencv/paddleseg.
 
-The segmentation is done with MobileNetV3 model that is implemented in mediapipe.
+Segmentation and matting is done with [PaddleSegMatting](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.7/Matting) more specificly I used a PP-MattingV2
+that is SOTA for image matting. The model is also lite and runs in about 0.5 seconds per photo.
+
+The results are as good as most online removers or changers, and often even better.
+
 
 # Preview
 
@@ -21,7 +25,6 @@ python3 app.py
 
 # TODO
 
-* change model to be slower but more accurate 
 * add video support
 * make frontend kinda good
-* add bilateral filter to mask
+* do i really need ppmatting to repo?

@@ -17,11 +17,9 @@ import math
 import time
 
 import cv2
-import numpy as np
 import paddle
 import paddle.nn.functional as F
 from paddleseg import utils
-from paddleseg.core import infer
 from paddleseg.utils import logger, progbar, TimeAverager
 
 from ppmatting.utils import mkdir, estimate_foreground_ml
@@ -33,36 +31,17 @@ def partition_list(arr, m):
     return [arr[i:i + n] for i in range(0, len(arr), n)]
 
 
-def save_result(alpha, path, im_path, trimap=None, fg_estimate=True):
+def save_result(alpha, im_path, trimap=None, fg_estimate=True):
     """
     The value of alpha is range [0, 1], shape should be [h,w]
     """
-    dirname = os.path.dirname(path)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    basename = os.path.basename(path)
-    name = os.path.splitext(basename)[0]
-    alpha_save_path = os.path.join(dirname, name + '_alpha.png')
-    rgba_save_path = os.path.join(dirname, name + '_rgba.png')
-
-    # save alpha matte
-    if trimap is not None:
-        trimap = cv2.imread(trimap, 0)
-        alpha[trimap == 0] = 0
-        alpha[trimap == 255] = 255
-    alpha = (alpha).astype('uint8')
-    cv2.imwrite(alpha_save_path, alpha)
-
-    # save rgba
-    im = cv2.imread(im_path)
+    #im = cv2.imread(im_path)
+    im = im_path
     if fg_estimate:
         fg = estimate_foreground_ml(im / 255.0, alpha / 255.0) * 255
     else:
         fg = im
     fg = fg.astype('uint8')
-    alpha = alpha[:, :, np.newaxis]
-    rgba = np.concatenate((fg, alpha), axis=-1)
-    cv2.imwrite(rgba_save_path, rgba)
 
     return fg
 
@@ -104,7 +83,6 @@ def predict(model,
             image_list,
             image_dir=None,
             trimap_list=None,
-            save_dir='output',
             fg_estimate=True):
     """
     predict and visualize the image_list.
@@ -154,18 +132,15 @@ def predict(model,
             alpha_pred = (alpha_pred * 255).astype('uint8')
 
             # get the saved name
-            if image_dir is not None:
-                im_file = im_path.replace(image_dir, '')
-            else:
-                im_file = os.path.basename(im_path)
-            if im_file[0] == '/' or im_file[0] == '\\':
-                im_file = im_file[1:]
+            # if image_dir is not None:
+            #     im_file = im_path.replace(image_dir, '')
+            # else:
+            #     im_file = os.path.basename(im_path)
+            # if im_file[0] == '/' or im_file[0] == '\\':
+            #     im_file = im_file[1:]
 
-            save_path = os.path.join(save_dir, im_file)
-            mkdir(save_path)
             fg = save_result(
                 alpha_pred,
-                save_path,
                 im_path=im_path,
                 trimap=trimap,
                 fg_estimate=fg_estimate)
