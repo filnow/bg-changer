@@ -22,7 +22,6 @@ ids: List[str] = []
 slider_ids: List[str] = ['red-slider', 'green-slider', 'blue-slider']
 changes: List[str] = [*bg_images.keys(), 'change-bg', 'brightness-slider']
 
-
 app = Dash(__name__)
 
 app.layout = html.Div([
@@ -179,7 +178,7 @@ app.layout = html.Div([
               }
 )
 
-def parse_contents(contents: str, 
+def parse_contents(contents: str,
                    id: str, 
                    bg_img: str, 
                    slider_value: Tuple[int, int, int]):
@@ -218,17 +217,17 @@ def update_output(list_of_contents: List[str],
                   example1: int,
                   example2: int,
                   example3: int,):
-    
+
     if list_of_contents is not None:
         if ctx.triggered_id == 'save_img':
             if ids[-1] in bg_images.keys():
                 change_bg = b64_image(bg_images[ids[-1]])
 
-            children = [parse_contents(c, 
-                                   ids[-1], 
-                                   change_bg, 
-                                   (red_slider, green_slider, blue_slider),
-                                   ) for c in list_of_contents]
+            children = [parse_contents(c,
+                                       ids[-1], 
+                                       change_bg, 
+                                       (red_slider, green_slider, blue_slider),) 
+                                       for c in list_of_contents]
 
             data = dcc.send_bytes(str_to_io(children[0][0]).getvalue(), "image.png")
             return data, no_update
@@ -237,15 +236,15 @@ def update_output(list_of_contents: List[str],
             if ctx.triggered_id in bg_images.keys():
                 change_bg = b64_image(bg_images[ctx.triggered_id])
             
-            children = [parse_contents(c, 
-                                    ctx.triggered_id, 
-                                    change_bg, 
-                                    (red_slider, green_slider, blue_slider),
-                                    ) for c in list_of_contents]
+            children = [parse_contents(c,
+                                       ctx.triggered_id, 
+                                       change_bg, 
+                                       (red_slider, green_slider, blue_slider),) 
+                                       for c in list_of_contents]
             ids.append(ctx.triggered_id)
             return no_update, children[0][1]
     
         
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
