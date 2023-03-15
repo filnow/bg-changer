@@ -27,4 +27,4 @@ python3 app.py
 
 * add video support
 * make frontend kinda good
-* do i really need ppmatting to repo?
+* import ppmatting from somewhere else
