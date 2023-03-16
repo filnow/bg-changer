@@ -1,5 +1,10 @@
 dash==2.8.1
-mediapipe==0.9.1.0
-numpy==1.22.4
-opencv_contrib_python==4.7.0.68
-Pillow==9.4.0
+numba==0.56.4
+opencv_python==4.6.0.66
+paddle==1.0.2
+paddlepaddle==2.4.2
+paddleseg==2.7.0
+PyMatting==1.1.8
+scipy==1.9.1
+skimage==0.0
+visualdl==2.5.1
