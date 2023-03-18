@@ -1,9 +1,9 @@
 from dash import Dash, dcc, html, ctx, no_update
 from dash.dependencies import Input, Output
-from images import ImageProcessor
+from images import process, change_bg, remove_bg, default_bg
 from utils import str_to_io, b64_image
 from typing import List, Dict, Tuple
-
+import numpy as np
 
 style_img: Dict[str, str] = {
     'max-width': '100%', 
@@ -19,6 +19,7 @@ bg_images: Dict[str, str] = {
 }
 
 ids: List[str] = []
+images: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
 slider_ids: List[str] = ['red-slider', 'green-slider', 'blue-slider']
 changes: List[str] = [*bg_images.keys(), 'change-bg', 'brightness-slider']
 
@@ -181,18 +182,17 @@ app.layout = html.Div([
 def parse_contents(contents: str,
                    id: str, 
                    bg_img: str, 
-                   slider_value: Tuple[int, int, int]):
-    
-    img = ImageProcessor(contents)
+                   slider_value: Tuple[int, int, int],
+                   alpha_fg):
 
     if id in slider_ids:
-        img = img.remove_bg(slider_value)
+        img = remove_bg(*alpha_fg, slider_value)
         return [img, html.Div([html.Img(src=img, style=style_img),])]
     elif id in changes:
-        img = img.change_bg(bg_img)
+        img = change_bg(*alpha_fg, bg_img)
         return [img, html.Div([html.Img(src=img, style=style_img),])]
     else:
-        img = img.default_bg()
+        img = default_bg(contents)
         return [img, html.Div([html.Img(src=contents, style=style_img),])]
 
 @app.callback(Output('download-image', 'data'),
@@ -218,16 +218,20 @@ def update_output(list_of_contents: List[str],
                   example2: int,
                   example3: int,):
 
+    if list_of_contents[0] not in images.keys():
+        images[list_of_contents[0]] = process(list_of_contents[0])
+        
     if list_of_contents is not None:
         if ctx.triggered_id == 'save_img':
             if ids[-1] in bg_images.keys():
                 change_bg = b64_image(bg_images[ids[-1]])
 
-            children = [parse_contents(c,
+            children = [parse_contents(list_of_contents[0],
                                        ids[-1], 
                                        change_bg, 
-                                       (red_slider, green_slider, blue_slider),) 
-                                       for c in list_of_contents]
+                                       (red_slider, green_slider, blue_slider),
+                                       images[list_of_contents[0]],
+                                       )]
 
             data = dcc.send_bytes(str_to_io(children[0][0]).getvalue(), "image.png")
             return data, no_update
@@ -236,11 +240,12 @@ def update_output(list_of_contents: List[str],
             if ctx.triggered_id in bg_images.keys():
                 change_bg = b64_image(bg_images[ctx.triggered_id])
             
-            children = [parse_contents(c,
+            children = [parse_contents(list_of_contents[0],
                                        ctx.triggered_id, 
                                        change_bg, 
-                                       (red_slider, green_slider, blue_slider),) 
-                                       for c in list_of_contents]
+                                       (red_slider, green_slider, blue_slider),
+                                       images[list_of_contents[0]],
+                                       )]
             ids.append(ctx.triggered_id)
             return no_update, children[0][1]
     

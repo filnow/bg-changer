@@ -10,42 +10,47 @@ from ppmatting.core import predict
 from utils import readb64
 
 
-class ImageProcessor:
-    def __init__(self, image: str) -> None:
-        paddle.set_device('cpu')
-        self.cfg = Config('./config/ppmattingv2-stdc1-human_512.yml')
-        self.image = readb64(image)
-        self.model = self.cfg.model
-        self.transforms = Compose(self.cfg.val_transforms)
+def change_bg(alpha: np.ndarray, 
+              fg: np.ndarray, 
+              bg_image: str) -> Image.Image:
+    bg = readb64(bg_image)
+    bg = cv2.resize(bg, (fg.shape[1], fg.shape[0]), interpolation = cv2.INTER_AREA)
+    com = alpha * fg + (1 - alpha) * bg
+    com = com.astype('uint8')
+    output = cv2.cvtColor(com, cv2.COLOR_BGR2RGB)
 
-        self.alpha, self.fg = predict(
-            self.model,
-            model_path='./config/ppmattingv2-stdc1-human_512.pdparams',
-            transforms=self.transforms,
-            image_list=[self.image],
-            )
-        
-        self.alpha = self.alpha / 255.0
-        self.alpha = self.alpha[:, :, np.newaxis]
+    return Image.fromarray(output).convert('RGB')
 
-    def change_bg(self, bg_image: str) -> Image.Image:
-        bg = readb64(bg_image)
-        bg = cv2.resize(bg, (self.image.shape[1], self.image.shape[0]), interpolation = cv2.INTER_AREA)
-        com = self.alpha * self.fg + (1 - self.alpha) * bg
-        com = com.astype('uint8')
-        output = cv2.cvtColor(com, cv2.COLOR_BGR2RGB)
+def remove_bg(alpha: np.ndarray, 
+              fg: np.ndarray, 
+              bg_color: Tuple[int, int, int]) -> Image.Image:
+    bg_image = np.zeros(fg.shape, dtype=np.uint8)
+    bg_image[:] = bg_color
+    com = alpha * fg + (1 - alpha) * bg_image
+    com = com.astype('uint8')
+    output = cv2.cvtColor(com, cv2.COLOR_BGR2RGB)
 
-        return Image.fromarray(output).convert('RGB')
+    return Image.fromarray(output).convert('RGB')
 
+def default_bg(img: str) -> Image.Image:
+    output = cv2.cvtColor(readb64(img), cv2.COLOR_BGR2RGB)
+    return Image.fromarray(output).convert('RGB')
+
+def process(img: str) -> Tuple[np.ndarray, np.ndarray]:
+    paddle.set_device('cpu')
+    cfg = Config('./config/ppmattingv2-stdc1-human_512.yml')
+    in_img = readb64(img)
+    model = cfg.model
+    transforms = Compose(cfg.val_transforms)
+
+    alpha, fg = predict(
+        model,
+        model_path='./config/ppmattingv2-stdc1-human_512.pdparams',
+        transforms=transforms,
+        image_list=[in_img],
+        )
     
-    def remove_bg(self, bg_color: Tuple[int, int, int]) -> Image.Image:
-        bg_image = np.zeros(self.image.shape, dtype=np.uint8)
-        bg_image[:] = bg_color
-        com = self.alpha * self.fg + (1 - self.alpha) * bg_image
-        com = com.astype('uint8')
-        output = cv2.cvtColor(com, cv2.COLOR_BGR2RGB)
+    alpha = alpha / 255.0
+    alpha = alpha[:, :, np.newaxis]
 
-        return Image.fromarray(output).convert('RGB')
-    
-    def default_bg(self) -> Image.Image:
-        return Image.fromarray(self.image).convert('RGB')
+    return (alpha, fg)
