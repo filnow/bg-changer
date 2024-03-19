@@ -25,11 +25,12 @@ def remove_bg(alpha: np.ndarray,
               fg: np.ndarray, 
               bg_color: Tuple[int, int, int]) -> Image.Image:
     bg_image = np.zeros(fg.shape, dtype=np.uint8)
-    bg_image[:] = bg_color
+    bg_image[:] = tuple(reversed(bg_color))
     com = alpha * fg + (1 - alpha) * bg_image
     com = com.astype('uint8')
+    output = cv2.cvtColor(com, cv2.COLOR_BGR2RGB)
 
-    return Image.fromarray(com).convert('RGB')
+    return Image.fromarray(output).convert('RGB')
 
 def default_bg(img: str) -> Image.Image:
     output = cv2.cvtColor(readb64(img), cv2.COLOR_BGR2RGB)
